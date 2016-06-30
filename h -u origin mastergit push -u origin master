@@ -1,0 +1,1258 @@
+[33mcommit 7c860e4765817fafe4f7b79fdb5c41504402df8d[m
+Author: Nikita Evdokimov <sarpen47@gmail.com>
+Date:   Thu Jun 30 16:44:06 2016 +0300
+
+    Partially Refactored Code
+
+[1mdiff --git a/app/build.gradle b/app/build.gradle[m
+[1mindex edde319..3635dba 100755[m
+[1m--- a/app/build.gradle[m
+[1m+++ b/app/build.gradle[m
+[36m@@ -22,7 +22,8 @@[m [mandroid {[m
+ dependencies {[m
+     compile fileTree(dir: 'libs', include: ['*.jar'])[m
+     testCompile 'junit:junit:4.12'[m
+[31m-    compile 'com.android.support:appcompat-v7:23.3.0'[m
+[31m-    compile 'com.android.support:support-v4:23.3.0'[m
+[31m-    compile 'com.android.support:design:23.3.0'[m
+[32m+[m[32m    compile 'com.android.support:appcompat-v7:23.4.0'[m
+[32m+[m[32m    compile 'com.android.support:support-v4:23.4.0'[m
+[32m+[m[32m    compile 'com.android.support:design:23.4.0'[m
+[32m+[m
+ }[m
+[1mdiff --git a/app/src/main/java/com/example/android/miwok/ColorsActivity.java b/app/src/main/java/com/example/android/miwok/ColorsActivity.java[m
+[1mindex e6d81ae..c18a184 100644[m
+[1m--- a/app/src/main/java/com/example/android/miwok/ColorsActivity.java[m
+[1m+++ b/app/src/main/java/com/example/android/miwok/ColorsActivity.java[m
+[36m@@ -28,154 +28,12 @@[m [mimport java.util.ArrayList;[m
+ [m
+ public class ColorsActivity extends AppCompatActivity {[m
+ [m
+[31m-    /** Handles playback of all the sound files */[m
+[31m-    private MediaPlayer mMediaPlayer;[m
+[31m-[m
+[31m-    /** Handles audio focus when playing a sound file */[m
+[31m-    private AudioManager mAudioManager;[m
+[31m-[m
+[31m-    /**[m
+[31m-     * This listener gets triggered when the {@link MediaPlayer} has completed[m
+[31m-     * playing the audio file.[m
+[31m-     */[m
+[31m-    private MediaPlayer.OnCompletionListener mCompletionListener = new MediaPlayer.OnCompletionListener() {[m
+[31m-        @Override[m
+[31m-        public void onCompletion(MediaPlayer mediaPlayer) {[m
+[31m-            // Now that the sound file has finished playing, release the media player resources.[m
+[31m-            releaseMediaPlayer();[m
+[31m-        }[m
+[31m-    };[m
+[31m-[m
+[31m-    /**[m
+[31m-     * This listener gets triggered whenever the audio focus changes[m
+[31m-     * (i.e., we gain or lose audio focus because of another app or device).[m
+[31m-     */[m
+[31m-    private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {[m
+[31m-        @Override[m
+[31m-        public void onAudioFocusChange(int focusChange) {[m
+[31m-            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||[m
+[31m-                    focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {[m
+[31m-                // The AUDIOFOCUS_LOSS_TRANSIENT case means that we've lost audio focus for a[m
+[31m-                // short amount of time. The AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK case means that[m
+[31m-                // our app is allowed to continue playing sound but at a lower volume. We'll treat[m
+[31m-                // both cases the same way because our app is playing short sound files.[m
+[31m-[m
+[31m-                // Pause playback and reset player to the start of the file. That way, we can[m
+[31m-                // play the word from the beginning when we resume playback.[m
+[31m-                mMediaPlayer.pause();[m
+[31m-                mMediaPlayer.seekTo(0);[m
+[31m-            } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {[m
+[31m-                // The AUDIOFOCUS_GAIN case means we have regained focus and can resume playback.[m
+[31m-                mMediaPlayer.start();[m
+[31m-            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {[m
+[31m-                // The AUDIOFOCUS_LOSS case means we've lost audio focus and[m
+[31m-                // Stop playback and clean up resources[m
+[31m-                releaseMediaPlayer();[m
+[31m-            }[m
+[31m-        }[m
+[31m-    };[m
+[31m-[m
+     @Override[m
+     protected void onCreate(Bundle savedInstanceState) {[m
+         super.onCreate(savedInstanceState);[m
+[31m-        setContentView(R.layout.word_list);[m
+[31m-[m
+[31m-        // Create and setup the {@link AudioManager} to request audio focus[m
+[31m-        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);[m
+[31m-[m
+[31m-        // Create a list of words[m
+[31m-        final ArrayList<Word> words = new ArrayList<Word>();[m
+[31m-        words.add(new Word(R.string.color_red, R.string.miwok_color_red,[m
+[31m-                R.drawable.color_red, R.raw.color_red));[m
+[31m-        words.add(new Word(R.string.color_mustard_yellow, R.string.miwok_color_mustard_yellow,[m
+[31m-                R.drawable.color_mustard_yellow, R.raw.color_mustard_yellow));[m
+[31m-        words.add(new Word(R.string.color_dusty_yellow, R.string.miwok_color_dusty_yellow,[m
+[31m-                R.drawable.color_dusty_yellow, R.raw.color_dusty_yellow));[m
+[31m-        words.add(new Word(R.string.color_green, R.string.miwok_color_green,[m
+[31m-                R.drawable.color_green, R.raw.color_green));[m
+[31m-        words.add(new Word(R.string.color_brown, R.string.miwok_color_brown,[m
+[31m-                R.drawable.color_brown, R.raw.color_brown));[m
+[31m-        words.add(new Word(R.string.color_gray, R.string.miwok_color_gray,[m
+[31m-                R.drawable.color_gray, R.raw.color_gray));[m
+[31m-        words.add(new Word(R.string.color_black, R.string.miwok_color_black,[m
+[31m-                R.drawable.color_black, R.raw.color_black));[m
+[31m-        words.add(new Word(R.string.color_white, R.string.miwok_color_white,[m
+[31m-                R.drawable.color_white, R.raw.color_white));[m
+[31m-[m
+[31m-        // Create an {@link WordAdapter}, whose data source is a list of {@link Word}s. The[m
+[31m-        // adapter knows how to create list items for each item in the list.[m
+[31m-        WordAdapter adapter = new WordAdapter(this, words, R.color.category_colors);[m
+[31m-[m
+[31m-        // Find the {@link ListView} object in the view hierarchy of the {@link Activity}.[m
+[31m-        // There should be a {@link ListView} with the view ID called list, which is declared in the[m
+[31m-        // word_list.xml layout file.[m
+[31m-        ListView listView = (ListView) findViewById(R.id.list);[m
+[31m-[m
+[31m-        // Make the {@link ListView} use the {@link WordAdapter} we created above, so that the[m
+[31m-        // {@link ListView} will display list items for each {@link Word} in the list.[m
+[31m-        listView.setAdapter(adapter);[m
+[31m-[m
+[31m-        // Set a click listener to play the audio when the list item is clicked on[m
+[31m-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {[m
+[31m-            @Override[m
+[31m-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {[m
+[31m-                // Release the media player if it currently exists because we are about to[m
+[31m-                // play a different sound file[m
+[31m-                releaseMediaPlayer();[m
+[31m-[m
+[31m-                // Get the {@link Word} object at the given position the user clicked on[m
+[31m-                Word word = words.get(position);[m
+[31m-[m
+[31m-                // Request audio focus so in order to play the audio file. The app needs to play a[m
+[31m-                // short audio file, so we will request audio focus with a short amount of time[m
+[31m-                // with AUDIOFOCUS_GAIN_TRANSIENT.[m
+[31m-                int result = mAudioManager.requestAudioFocus(mOnAudioFocusChangeListener,[m
+[31m-                        AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);[m
+[31m-[m
+[31m-                if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {[m
+[31m-                    // We have audio focus now.[m
+[31m-[m
+[31m-                    // Create and setup the {@link MediaPlayer} for the audio resource associated[m
+[31m-                    // with the current word[m
+[31m-                    mMediaPlayer = MediaPlayer.create(ColorsActivity.this, word.getAudioResourceId());[m
+[31m-[m
+[31m-                    // Start the audio file[m
+[31m-                    mMediaPlayer.start();[m
+[31m-[m
+[31m-                    // Setup a listener on the media player, so that we can stop and release the[m
+[31m-                    // media player once the sound has finished playing.[m
+[31m-                    mMediaPlayer.setOnCompletionListener(mCompletionListener);[m
+[31m-                }[m
+[31m-            }[m
+[31m-        });[m
+[31m-    }[m
+[31m-[m
+[31m-    @Override[m
+[31m-    protected void onStop() {[m
+[31m-        super.onStop();[m
+[31m-        // When the activity is stopped, release the media player resources because we won't[m
+[31m-        // be playing any more sounds.[m
+[31m-        releaseMediaPlayer();[m
+[31m-    }[m
+[31m-[m
+[31m-    /**[m
+[31m-     * Clean up the media player by releasing its resources.[m
+[31m-     */[m
+[31m-    private void releaseMediaPlayer() {[m
+[31m-        // If the media player is not null, then it may be currently playing a sound.[m
+[31m-        if (mMediaPlayer != null) {[m
+[31m-            // Regardless of the current state of the media player, release its resources[m
+[31m-            // because we no longer need it.[m
+[31m-            mMediaPlayer.release();[m
+[31m-[m
+[31m-            // Set the media player back to null. For our code, we've decided that[m
+[31m-            // setting the media player to null is an easy way to tell that the media player[m
+[31m-            // is not configured to play an audio file at the moment.[m
+[31m-            mMediaPlayer = null;[m
+[31m-[m
+[31m-            // Regardless of whether or not we were granted audio focus, abandon it. This also[m
+[31m-            // unregisters the AudioFocusChangeListener so we don't get anymore callbacks.[m
+[31m-            mAudioManager.abandonAudioFocus(mOnAudioFocusChangeListener);[m
+[31m-        }[m
+[32m+[m[32m        setContentView(R.layout.container);[m
+[32m+[m[32m        getSupportFragmentManager().beginTransaction().replace([m
+[32m+[m[32m                R.id.container, new ColorsFragment()[m
+[32m+[m[32m        ).commit();[m
+     }[m
+ }[m
+[1mdiff --git a/app/src/main/java/com/example/android/miwok/ColorsFragment.java b/app/src/main/java/com/example/android/miwok/ColorsFragment.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..cfa7891[m
+[1m--- /dev/null[m
+[1m+++ b/app/src/main/java/com/example/android/miwok/ColorsFragment.java[m
+[36m@@ -0,0 +1,129 @@[m
+[32m+[m[32mpackage com.example.android.miwok;[m
+[32m+[m
+[32m+[m[32mimport android.support.v4.app.Fragment;[m
+[32m+[m[32mimport android.content.Context;[m
+[32m+[m[32mimport android.media.AudioManager;[m
+[32m+[m[32mimport android.media.MediaPlayer;[m
+[32m+[m[32mimport android.os.Bundle;[m
+[32m+[m[32mimport android.view.LayoutInflater;[m
+[32m+[m[32mimport android.view.View;[m
+[32m+[m[32mimport android.view.ViewGroup;[m
+[32m+[m[32mimport android.widget.ListView;[m
+[32m+[m
+[32m+[m[32mimport java.util.ArrayList;[m
+[32m+[m
+[32m+[m[32m/**[m
+[32m+[m[32m * Created by evdokimovn on 29.06.16.[m
+[32m+[m[32m */[m
+[32m+[m[32mpublic class ColorsFragment extends Fragment {[m
+[32m+[m[32m    /** Handles playback of all the sound files */[m
+[32m+[m[32m    private MediaPlayer mMediaPlayer;[m
+[32m+[m
+[32m+[m[32m    /** Handles audio focus when playing a sound file */[m
+[32m+[m[32m    private AudioManager mAudioManager;[m
+[32m+[m
+[32m+[m[32m    /**[m
+[32m+[m[32m     * This listener gets triggered whenever the audio focus changes[m
+[32m+[m[32m     * (i.e., we gain or lose audio focus because of another app or device).[m
+[32m+[m[32m     */[m
+[32m+[m[32m    private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {[m
+[32m+[m[32m        @Override[m
+[32m+[m[32m        public void onAudioFocusChange(int focusChange) {[m
+[32m+[m[32m            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||[m
+[32m+[m[32m                    focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {[m
+[32m+[m[32m                // The AUDIOFOCUS_LOSS_TRANSIENT case means that we've lost audio focus for a[m
+[32m+[m[32m                // short amount of time. The AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK case means that[m
+[32m+[m[32m                // our app is allowed to continue playing sound but at a lower volume. We'll treat[m
+[32m+[m[32m                // both cases the same way because our app is playing short sound files.[m
+[32m+[m
+[32m+[m[32m                // Pause playback and reset player to the start of the file. That way, we can[m
+[32m+[m[32m                // play the word from the beginning when we resume playback.[m
+[32m+[m[32m                mMediaPlayer.pause();[m
+[32m+[m[32m                mMediaPlayer.seekTo(0);[m
+[32m+[m[32m            } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {[m
+[32m+[m[32m                // The AUDIOFOCUS_GAIN case means we have regained focus and can resume playback.[m
+[32m+[m[32m                mMediaPlayer.start();[m
+[32m+[m[32m            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {[m
+[32m+[m[32m                // The AUDIOFOCUS_LOSS case means we've lost audio focus and[m
+[32m+[m[32m                // Stop playback and clean up resources[m
+[32m+[m[32m                releaseMediaPlayer();[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m[32m    };[m
+[32m+[m
+[32m+[m
+[32m+[m[32m    public ColorsFragment(){}[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public View onCreateView(LayoutInflater inflater, ViewGroup container,[m
+[32m+[m[32m                             Bundle savedInstanceState) {[m
+[32m+[m[32m        View rootView = inflater.inflate(R.layout.word_list, container, false);[m
+[32m+[m
+[32m+[m[32m        // Create and setup the {@link AudioManager} to request audio focus[m
+[32m+[m[32m        mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);[m
+[32m+[m
+[32m+[m[32m        // Create a list of words[m
+[32m+[m[32m        final ArrayList<Word> words = new ArrayList<Word>();[m
+[32m+[m[32m        words.add(new Word(R.string.color_red, R.string.miwok_color_red,[m
+[32m+[m[32m                R.drawable.color_red, R.raw.color_red));[m
+[32m+[m[32m        words.add(new Word(R.string.color_mustard_yellow, R.string.miwok_color_mustard_yellow,[m
+[32m+[m[32m                R.drawable.color_mustard_yellow, R.raw.color_mustard_yellow));[m
+[32m+[m[32m        words.add(new Word(R.string.color_dusty_yellow, R.string.miwok_color_dusty_yellow,[m
+[32m+[m[32m                R.drawable.color_dusty_yellow, R.raw.color_dusty_yellow));[m
+[32m+[m[32m        words.add(new Word(R.string.color_green, R.string.miwok_color_green,[m
+[32m+[m[32m                R.drawable.color_green, R.raw.color_green));[m
+[32m+[m[32m        words.add(new Word(R.string.color_brown, R.string.miwok_color_brown,[m
+[32m+[m[32m                R.drawable.color_brown, R.raw.color_brown));[m
+[32m+[m[32m        words.add(new Word(R.string.color_gray, R.string.miwok_color_gray,[m
+[32m+[m[32m                R.drawable.color_gray, R.raw.color_gray));[m
+[32m+[m[32m        words.add(new Word(R.string.color_black, R.string.miwok_color_black,[m
+[32m+[m[32m                R.drawable.color_black, R.raw.color_black));[m
+[32m+[m[32m        words.add(new Word(R.string.color_white, R.string.miwok_color_white,[m
+[32m+[m[32m                R.drawable.color_white, R.raw.color_white));[m
+[32m+[m
+[32m+[m[32m        // Create an {@link WordAdapter}, whose data source is a list of {@link Word}s. The[m
+[32m+[m[32m        // adapter knows how to create list items for each item in the list.[m
+[32m+[m[32m        WordAdapter adapter = new WordAdapter(getActivity(), words, R.color.category_colors);[m
+[32m+[m
+[32m+[m[32m        // Find the {@link ListView} object in the view hierarchy of the {@link Activity}.[m
+[32m+[m[32m        // There should be a {@link ListView} with the view ID called list, which is declared in the[m
+[32m+[m[32m        // word_list.xml layout file.[m
+[32m+[m[32m        ListView listView = (ListView) rootView.findViewById(R.id.list);[m
+[32m+[m
+[32m+[m[32m        // Make the {@link ListView} use the {@link WordAdapter} we created above, so that the[m
+[32m+[m[32m        // {@link ListView} will display list items for each {@link Word} in the list.[m
+[32m+[m[32m        listView.setAdapter(adapter);[m
+[32m+[m
+[32m+[m[32m        // Set a click listener to play the audio when the list item is clicked on[m
+[32m+[m[32m        listView.setOnItemClickListener(new ItemClickWord(mAudioManager, mMediaPlayer, getActivity()));[m
+[32m+[m
+[32m+[m[32m        return rootView;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void onStart() {[m
+[32m+[m[32m        super.onStart();[m
+[32m+[m[32m        releaseMediaPlayer();[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    /**[m
+[32m+[m[32m     * Clean up the media player by releasing its resources.[m
+[32m+[m[32m     */[m
+[32m+[m[32m    private void releaseMediaPlayer() {[m
+[32m+[m[32m        // If the media player is not null, then it may be currently playing a sound.[m
+[32m+[m[32m        if (mMediaPlayer != null) {[m
+[32m+[m[32m            // Regardless of the current state of the media player, release its resources[m
+[32m+[m[32m            // because we no longer need it.[m
+[32m+[m[32m            mMediaPlayer.release();[m
+[32m+[m
+[32m+[m[32m            // Set the media player back to null. For our code, we've decided that[m
+[32m+[m[32m            // setting the media player to null is an easy way to tell that the media player[m
+[32m+[m[32m            // is not configured to play an audio file at the moment.[m
+[32m+[m[32m            mMediaPlayer = null;[m
+[32m+[m
+[32m+[m[32m            // Regardless of whether or not we were granted audio focus, abandon it. This also[m
+[32m+[m[32m            // unregisters the AudioFocusChangeListener so we don't get anymore callbacks.[m
+[32m+[m[32m            mAudioManager.abandonAudioFocus(mOnAudioFocusChangeListener);[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/src/main/java/com/example/android/miwok/FamilyActivity.java b/app/src/main/java/com/example/android/miwok/FamilyActivity.java[m
+[1mindex 79075b1..99ab403 100644[m
+[1m--- a/app/src/main/java/com/example/android/miwok/FamilyActivity.java[m
+[1m+++ b/app/src/main/java/com/example/android/miwok/FamilyActivity.java[m
+[36m@@ -15,171 +15,22 @@[m
+  */[m
+ package com.example.android.miwok;[m
+ [m
+[31m-import android.content.Context;[m
+[31m-import android.media.AudioManager;[m
+[31m-import android.media.MediaPlayer;[m
+[31m-import android.support.v7.app.AppCompatActivity;[m
+[32m+[m
+[32m+[m
+ import android.os.Bundle;[m
+[31m-import android.view.View;[m
+[31m-import android.widget.AdapterView;[m
+[31m-import android.widget.ListView;[m
+[32m+[m[32mimport android.support.v7.app.AppCompatActivity;[m
+ [m
+ import java.util.ArrayList;[m
+ [m
+ public class FamilyActivity extends AppCompatActivity {[m
+ [m
+[31m-    /** Handles playback of all the sound files */[m
+[31m-    private MediaPlayer mMediaPlayer;[m
+[31m-[m
+[31m-    /** Handles audio focus when playing a sound file */[m
+[31m-    private AudioManager mAudioManager;[m
+[31m-[m
+[31m-    /**[m
+[31m-     * This listener gets triggered when the {@link MediaPlayer} has completed[m
+[31m-     * playing the audio file.[m
+[31m-     */[m
+[31m-    private MediaPlayer.OnCompletionListener mCompletionListener = new MediaPlayer.OnCompletionListener() {[m
+[31m-        @Override[m
+[31m-        public void onCompletion(MediaPlayer mediaPlayer) {[m
+[31m-            // Now that the sound file has finished playing, release the media player resources.[m
+[31m-            releaseMediaPlayer();[m
+[31m-        }[m
+[31m-    };[m
+[31m-[m
+[31m-    /**[m
+[31m-     * This listener gets triggered whenever the audio focus changes[m
+[31m-     * (i.e., we gain or lose audio focus because of another app or device).[m
+[31m-     */[m
+[31m-    private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {[m
+[31m-        @Override[m
+[31m-        public void onAudioFocusChange(int focusChange) {[m
+[31m-            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||[m
+[31m-                    focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {[m
+[31m-                // The AUDIOFOCUS_LOSS_TRANSIENT case means that we've lost audio focus for a[m
+[31m-                // short amount of time. The AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK case means that[m
+[31m-                // our app is allowed to continue playing sound but at a lower volume. We'll treat[m
+[31m-                // both cases the same way because our app is playing short sound files.[m
+[31m-[m
+[31m-                // Pause playback and reset player to the start of the file. That way, we can[m
+[31m-                // play the word from the beginning when we resume playback.[m
+[31m-                mMediaPlayer.pause();[m
+[31m-                mMediaPlayer.seekTo(0);[m
+[31m-            } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {[m
+[31m-                // The AUDIOFOCUS_GAIN case means we have regained focus and can resume playback.[m
+[31m-                mMediaPlayer.start();[m
+[31m-            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {[m
+[31m-                // The AUDIOFOCUS_LOSS case means we've lost audio focus and[m
+[31m-                // Stop playback and clean up resources[m
+[31m-                releaseMediaPlayer();[m
+[31m-            }[m
+[31m-        }[m
+[31m-    };[m
+ [m
+     @Override[m
+     protected void onCreate(Bundle savedInstanceState) {[m
+         super.onCreate(savedInstanceState);[m
+[31m-        setContentView(R.layout.word_list);[m
+[31m-[m
+[31m-        // Create and setup the {@link AudioManager} to request audio focus[m
+[31m-        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);[m
+[31m-[m
+[31m-        // Create a list of words[m
+[31m-        final ArrayList<Word> words = new ArrayList<Word>();[m
+[31m-        words.add(new Word(R.string.family_father, R.string.miwok_family_father,[m
+[31m-                R.drawable.family_father, R.raw.family_father));[m
+[31m-        words.add(new Word(R.string.family_mother, R.string.miwok_family_mother,[m
+[31m-                R.drawable.family_mother, R.raw.family_mother));[m
+[31m-        words.add(new Word(R.string.family_son, R.string.miwok_family_son,[m
+[31m-                R.drawable.family_son, R.raw.family_son));[m
+[31m-        words.add(new Word(R.string.family_daughter, R.string.miwok_family_daughter,[m
+[31m-                R.drawable.family_daughter, R.raw.family_daughter));[m
+[31m-        words.add(new Word(R.string.family_older_brother, R.string.miwok_family_older_brother,[m
+[31m-                R.drawable.family_older_brother, R.raw.family_older_brother));[m
+[31m-        words.add(new Word(R.string.family_younger_brother, R.string.miwok_family_younger_brother,[m
+[31m-                R.drawable.family_younger_brother, R.raw.family_younger_brother));[m
+[31m-        words.add(new Word(R.string.family_older_sister, R.string.miwok_family_older_sister,[m
+[31m-                R.drawable.family_older_sister, R.raw.family_older_sister));[m
+[31m-        words.add(new Word(R.string.family_younger_sister, R.string.miwok_family_younger_sister,[m
+[31m-                R.drawable.family_younger_sister, R.raw.family_younger_sister));[m
+[31m-        words.add(new Word(R.string.family_grandmother, R.string.miwok_family_grandmother,[m
+[31m-                R.drawable.family_grandmother, R.raw.family_grandmother));[m
+[31m-        words.add(new Word(R.string.family_grandfather, R.string.miwok_family_grandfather,[m
+[31m-                R.drawable.family_grandfather, R.raw.family_grandfather));[m
+[31m-[m
+[31m-        // Create an {@link WordAdapter}, whose data source is a list of {@link Word}s. The[m
+[31m-        // adapter knows how to create list items for each item in the list.[m
+[31m-        WordAdapter adapter = new WordAdapter(this, words, R.color.category_family);[m
+[31m-[m
+[31m-        // Find the {@link ListView} object in the view hierarchy of the {@link Activity}.[m
+[31m-        // There should be a {@link ListView} with the view ID called list, which is declared in the[m
+[31m-        // word_list.xml layout file.[m
+[31m-        ListView listView = (ListView) findViewById(R.id.list);[m
+[31m-[m
+[31m-        // Make the {@link ListView} use the {@link WordAdapter} we created above, so that the[m
+[31m-        // {@link ListView} will display list items for each {@link Word} in the list.[m
+[31m-        listView.setAdapter(adapter);[m
+[31m-[m
+[31m-        // Set a click listener to play the audio when the list item is clicked on[m
+[31m-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {[m
+[31m-            @Override[m
+[31m-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {[m
+[31m-                // Release the media player if it currently exists because we are about to[m
+[31m-                // play a different sound file[m
+[31m-                releaseMediaPlayer();[m
+[31m-[m
+[31m-                // Get the {@link Word} object at the given position the user clicked on[m
+[31m-                Word word = words.get(position);[m
+[31m-[m
+[31m-                // Request audio focus so in order to play the audio file. The app needs to play a[m
+[31m-                // short audio file, so we will request audio focus with a short amount of time[m
+[31m-                // with AUDIOFOCUS_GAIN_TRANSIENT.[m
+[31m-                int result = mAudioManager.requestAudioFocus(mOnAudioFocusChangeListener,[m
+[31m-                        AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);[m
+[31m-[m
+[31m-                if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {[m
+[31m-                    // We have audio focus now.[m
+[31m-[m
+[31m-                    // Create and setup the {@link MediaPlayer} for the audio resource associated[m
+[31m-                    // with the current word[m
+[31m-                    mMediaPlayer = MediaPlayer.create(FamilyActivity.this, word.getAudioResourceId());[m
+[31m-[m
+[31m-                    // Start the audio file[m
+[31m-                    mMediaPlayer.start();[m
+[31m-[m
+[31m-                    // Setup a listener on the media player, so that we can stop and release the[m
+[31m-                    // media player once the sound has finished playing.[m
+[31m-                    mMediaPlayer.setOnCompletionListener(mCompletionListener);[m
+[31m-                }[m
+[31m-            }[m
+[31m-        });[m
+[31m-    }[m
+[31m-[m
+[31m-    @Override[m
+[31m-    protected void onStop() {[m
+[31m-        super.onStop();[m
+[31m-        // When the activity is stopped, release the media player resources because we won't[m
+[31m-        // be playing any more sounds.[m
+[31m-        releaseMediaPlayer();[m
+[31m-    }[m
+[31m-[m
+[31m-    /**[m
+[31m-     * Clean up the media player by releasing its resources.[m
+[31m-     */[m
+[31m-    private void releaseMediaPlayer() {[m
+[31m-        // If the media player is not null, then it may be currently playing a sound.[m
+[31m-        if (mMediaPlayer != null) {[m
+[31m-            // Regardless of the current state of the media player, release its resources[m
+[31m-            // because we no longer need it.[m
+[31m-            mMediaPlayer.release();[m
+[31m-[m
+[31m-            // Set the media player back to null. For our code, we've decided that[m
+[31m-            // setting the media player to null is an easy way to tell that the media player[m
+[31m-            // is not configured to play an audio file at the moment.[m
+[31m-            mMediaPlayer = null;[m
+[31m-[m
+[31m-            // Regardless of whether or not we were granted audio focus, abandon it. This also[m
+[31m-            // unregisters the AudioFocusChangeListener so we don't get anymore callbacks.[m
+[31m-            mAudioManager.abandonAudioFocus(mOnAudioFocusChangeListener);[m
+[31m-        }[m
+[32m+[m[32m        setContentView(R.layout.container);[m
+[32m+[m[32m        getSupportFragmentManager().beginTransaction().replace([m
+[32m+[m[32m                R.id.container, new FamilyFragment()[m
+[32m+[m[32m        ).commit();[m
+     }[m
+ }[m
+[1mdiff --git a/app/src/main/java/com/example/android/miwok/FamilyFragment.java b/app/src/main/java/com/example/android/miwok/FamilyFragment.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..63db025[m
+[1m--- /dev/null[m
+[1m+++ b/app/src/main/java/com/example/android/miwok/FamilyFragment.java[m
+[36m@@ -0,0 +1,133 @@[m
+[32m+[m[32mpackage com.example.android.miwok;[m
+[32m+[m
+[32m+[m[32mimport android.support.v4.app.Fragment;[m
+[32m+[m[32mimport android.content.Context;[m
+[32m+[m[32mimport android.media.AudioManager;[m
+[32m+[m[32mimport android.media.MediaPlayer;[m
+[32m+[m[32mimport android.os.Bundle;[m
+[32m+[m[32mimport android.view.LayoutInflater;[m
+[32m+[m[32mimport android.view.View;[m
+[32m+[m[32mimport android.view.ViewGroup;[m
+[32m+[m[32mimport android.widget.ListView;[m
+[32m+[m
+[32m+[m[32mimport java.util.ArrayList;[m
+[32m+[m
+[32m+[m[32m/**[m
+[32m+[m[32m * Created by evdokimovn on 29.06.16.[m
+[32m+[m[32m */[m
+[32m+[m[32mpublic class FamilyFragment extends Fragment {[m
+[32m+[m[32m    /** Handles playback of all the sound files */[m
+[32m+[m[32m    private MediaPlayer mMediaPlayer;[m
+[32m+[m
+[32m+[m[32m    /** Handles audio focus when playing a sound file */[m
+[32m+[m[32m    private AudioManager mAudioManager;[m
+[32m+[m
+[32m+[m[32m    /**[m
+[32m+[m[32m     * This listener gets triggered whenever the audio focus changes[m
+[32m+[m[32m     * (i.e., we gain or lose audio focus because of another app or device).[m
+[32m+[m[32m     */[m
+[32m+[m[32m    private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {[m
+[32m+[m[32m        @Override[m
+[32m+[m[32m        public void onAudioFocusChange(int focusChange) {[m
+[32m+[m[32m            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||[m
+[32m+[m[32m                    focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {[m
+[32m+[m[32m                // The AUDIOFOCUS_LOSS_TRANSIENT case means that we've lost audio focus for a[m
+[32m+[m[32m                // short amount of time. The AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK case means that[m
+[32m+[m[32m                // our app is allowed to continue playing sound but at a lower volume. We'll treat[m
+[32m+[m[32m                // both cases the same way because our app is playing short sound files.[m
+[32m+[m
+[32m+[m[32m                // Pause playback and reset player to the start of the file. That way, we can[m
+[32m+[m[32m                // play the word from the beginning when we resume playback.[m
+[32m+[m[32m                mMediaPlayer.pause();[m
+[32m+[m[32m                mMediaPlayer.seekTo(0);[m
+[32m+[m[32m            } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {[m
+[32m+[m[32m                // The AUDIOFOCUS_GAIN case means we have regained focus and can resume playback.[m
+[32m+[m[32m                mMediaPlayer.start();[m
+[32m+[m[32m            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {[m
+[32m+[m[32m                // The AUDIOFOCUS_LOSS case means we've lost audio focus and[m
+[32m+[m[32m                // Stop playback and clean up resources[m
+[32m+[m[32m                releaseMediaPlayer();[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m[32m    };[m
+[32m+[m
+[32m+[m
+[32m+[m[32m    public FamilyFragment(){}[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public View onCreateView(LayoutInflater inflater, ViewGroup container,[m
+[32m+[m[32m                             Bundle savedInstanceState) {[m
+[32m+[m[32m        View rootView = inflater.inflate(R.layout.word_list, container, false);[m
+[32m+[m
+[32m+[m[32m        // Create and setup the {@link AudioManager} to request audio focus[m
+[32m+[m[32m        mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);[m
+[32m+[m
+[32m+[m[32m        // Create a list of words[m
+[32m+[m[32m        final ArrayList<Word> words = new ArrayList<Word>();[m
+[32m+[m[32m        words.add(new Word(R.string.family_father, R.string.miwok_family_father,[m
+[32m+[m[32m                R.drawable.family_father, R.raw.family_father));[m
+[32m+[m[32m        words.add(new Word(R.string.family_mother, R.string.miwok_family_mother,[m
+[32m+[m[32m                R.drawable.family_mother, R.raw.family_mother));[m
+[32m+[m[32m        words.add(new Word(R.string.family_son, R.string.miwok_family_son,[m
+[32m+[m[32m                R.drawable.family_son, R.raw.family_son));[m
+[32m+[m[32m        words.add(new Word(R.string.family_daughter, R.string.miwok_family_daughter,[m
+[32m+[m[32m                R.drawable.family_daughter, R.raw.family_daughter));[m
+[32m+[m[32m        words.add(new Word(R.string.family_older_brother, R.string.miwok_family_older_brother,[m
+[32m+[m[32m                R.drawable.family_older_brother, R.raw.family_older_brother));[m
+[32m+[m[32m        words.add(new Word(R.string.family_younger_brother, R.string.miwok_family_younger_brother,[m
+[32m+[m[32m                R.drawable.family_younger_brother, R.raw.family_younger_brother));[m
+[32m+[m[32m        words.add(new Word(R.string.family_older_sister, R.string.miwok_family_older_sister,[m
+[32m+[m[32m                R.drawable.family_older_sister, R.raw.family_older_sister));[m
+[32m+[m[32m        words.add(new Word(R.string.family_younger_sister, R.string.miwok_family_younger_sister,[m
+[32m+[m[32m                R.drawable.family_younger_sister, R.raw.family_younger_sister));[m
+[32m+[m[32m        words.add(new Word(R.string.family_grandmother, R.string.miwok_family_grandmother,[m
+[32m+[m[32m                R.drawable.family_grandmother, R.raw.family_grandmother));[m
+[32m+[m[32m        words.add(new Word(R.string.family_grandfather, R.string.miwok_family_grandfather,[m
+[32m+[m[32m                R.drawable.family_grandfather, R.raw.family_grandfather));[m
+[32m+[m
+[32m+[m[32m        // Create an {@link WordAdapter}, whose data source is a list of {@link Word}s. The[m
+[32m+[m[32m        // adapter knows how to create list items for each item in the list.[m
+[32m+[m[32m        WordAdapter adapter = new WordAdapter(getActivity(), words, R.color.category_family);[m
+[32m+[m
+[32m+[m[32m        // Find the {@link ListView} object in the view hierarchy of the {@link Activity}.[m
+[32m+[m[32m        // There should be a {@link ListView} with the view ID called list, which is declared in the[m
+[32m+[m[32m        // word_list.xml layout file.[m
+[32m+[m[32m        ListView listView = (ListView) rootView.findViewById(R.id.list);[m
+[32m+[m
+[32m+[m[32m        // Make the {@link ListView} use the {@link WordAdapter} we created above, so that the[m
+[32m+[m[32m        // {@link ListView} will display list items for each {@link Word} in the list.[m
+[32m+[m[32m        listView.setAdapter(adapter);[m
+[32m+[m
+[32m+[m[32m        // Set a click listener to play the audio when the list item is clicked on[m
+[32m+[m[32m        listView.setOnItemClickListener(new ItemClickWord(mAudioManager, mMediaPlayer, getActivity()));[m
+[32m+[m
+[32m+[m[32m        return rootView;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void onStart() {[m
+[32m+[m[32m        super.onStart();[m
+[32m+[m[32m        releaseMediaPlayer();[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    /**[m
+[32m+[m[32m     * Clean up the media player by releasing its resources.[m
+[32m+[m[32m     */[m
+[32m+[m[32m    private void releaseMediaPlayer() {[m
+[32m+[m[32m        // If the media player is not null, then it may be currently playing a sound.[m
+[32m+[m[32m        if (mMediaPlayer != null) {[m
+[32m+[m[32m            // Regardless of the current state of the media player, release its resources[m
+[32m+[m[32m            // because we no longer need it.[m
+[32m+[m[32m            mMediaPlayer.release();[m
+[32m+[m
+[32m+[m[32m            // Set the media player back to null. For our code, we've decided that[m
+[32m+[m[32m            // setting the media player to null is an easy way to tell that the media player[m
+[32m+[m[32m            // is not configured to play an audio file at the moment.[m
+[32m+[m[32m            mMediaPlayer = null;[m
+[32m+[m
+[32m+[m[32m            // Regardless of whether or not we were granted audio focus, abandon it. This also[m
+[32m+[m[32m            // unregisters the AudioFocusChangeListener so we don't get anymore callbacks.[m
+[32m+[m[32m            mAudioManager.abandonAudioFocus(mOnAudioFocusChangeListener);[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/src/main/java/com/example/android/miwok/FragmentPageAdapter.java b/app/src/main/java/com/example/android/miwok/FragmentPageAdapter.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..2a0add3[m
+[1m--- /dev/null[m
+[1m+++ b/app/src/main/java/com/example/android/miwok/FragmentPageAdapter.java[m
+[36m@@ -0,0 +1,43 @@[m
+[32m+[m[32mpackage com.example.android.miwok;[m
+[32m+[m
+[32m+[m
+[32m+[m[32mimport android.support.v4.app.Fragment;[m
+[32m+[m[32mimport android.support.v4.app.FragmentManager;[m
+[32m+[m[32mimport android.support.v4.app.FragmentPagerAdapter;[m
+[32m+[m
+[32m+[m[32m/**[m
+[32m+[m[32m * Created by evdokimovn on 29.06.16.[m
+[32m+[m[32m */[m
+[32m+[m[32mpublic class FragmentPageAdapter extends FragmentPagerAdapter {[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public CharSequence getPageTitle(int position) {[m
+[32m+[m[32m        return tabTitles[position];[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    private String tabTitles[] = new String[] { "Numbers", "Family", "Colors", "Phrases" };[m
+[32m+[m
+[32m+[m[32m    public FragmentPageAdapter(FragmentManager fm) {[m
+[32m+[m[32m        super(fm);[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public Fragment getItem(int position) {[m
+[32m+[m[32m        if (position == 0) {[m
+[32m+[m[32m            return new NumbersFragment();[m
+[32m+[m[32m        } else if (position == 1){[m
+[32m+[m[32m            return new FamilyFragment();[m
+[32m+[m[32m        } else if (position == 2){[m
+[32m+[m[32m            return new ColorsFragment();[m
+[32m+[m[32m        }[m
+[32m+[m[32m        else {[m
+[32m+[m[32m            return new PhrasesFragment();[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public int getCount() {[m
+[32m+[m[32m        return 4;[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/src/main/java/com/example/android/miwok/ItemClickWord.java b/app/src/main/java/com/example/android/miwok/ItemClickWord.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..2579a08[m
+[1m--- /dev/null[m
+[1m+++ b/app/src/main/java/com/example/android/miwok/ItemClickWord.java[m
+[36m@@ -0,0 +1,115 @@[m
+[32m+[m[32mpackage com.example.android.miwok;[m
+[32m+[m
+[32m+[m[32mimport android.content.Context;[m
+[32m+[m[32mimport android.media.AudioManager;[m
+[32m+[m[32mimport android.media.MediaPlayer;[m
+[32m+[m[32mimport android.view.View;[m
+[32m+[m[32mimport android.widget.AdapterView;[m
+[32m+[m
+[32m+[m[32m/**[m
+[32m+[m[32m * Created by evdokimovn on 29.06.16.[m
+[32m+[m[32m */[m
+[32m+[m[32mpublic class ItemClickWord implements AdapterView.OnItemClickListener {[m
+[32m+[m[32m    private AudioManager mAudioManager;[m
+[32m+[m[32m    private MediaPlayer mMediaPlayer;[m
+[32m+[m[32m    private Context mContext;[m
+[32m+[m
+[32m+[m
+[32m+[m[32m    public ItemClickWord(AudioManager audioManager, MediaPlayer mediaPlayer, Context context) {[m
+[32m+[m[32m        mAudioManager = audioManager;[m
+[32m+[m[32m        mMediaPlayer = mediaPlayer;[m
+[32m+[m[32m        mContext = context;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    /**[m
+[32m+[m[32m     * This listener gets triggered when the {@link MediaPlayer} has completed[m
+[32m+[m[32m     * playing the audio file.[m
+[32m+[m[32m     */[m
+[32m+[m
+[32m+[m[32m    private MediaPlayer.OnCompletionListener mCompletionListener = new MediaPlayer.OnCompletionListener() {[m
+[32m+[m[32m        @Override[m
+[32m+[m[32m        public void onCompletion(MediaPlayer mediaPlayer) {[m
+[32m+[m[32m            // Now that the sound file has finished playing, release the media player resources.[m
+[32m+[m[32m            releaseMediaPlayer();[m
+[32m+[m[32m        }[m
+[32m+[m[32m    };[m
+[32m+[m
+[32m+[m[32m    /**[m
+[32m+[m[32m     * This listener gets triggered whenever the audio focus changes[m
+[32m+[m[32m     * (i.e., we gain or lose audio focus because of another app or device).[m
+[32m+[m[32m     */[m
+[32m+[m[32m    //ToDo put into it's own class[m
+[32m+[m[32m    private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {[m
+[32m+[m[32m        @Override[m
+[32m+[m[32m        public void onAudioFocusChange(int focusChange) {[m
+[32m+[m[32m            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||[m
+[32m+[m[32m                    focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {[m
+[32m+[m[32m                // The AUDIOFOCUS_LOSS_TRANSIENT case means that we've lost audio focus for a[m
+[32m+[m[32m                // short amount of time. The AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK case means that[m
+[32m+[m[32m                // our app is allowed to continue playing sound but at a lower volume. We'll treat[m
+[32m+[m[32m                // both cases the same way because our app is playing short sound files.[m
+[32m+[m
+[32m+[m[32m                // Pause playback and reset player to the start of the file. That way, we can[m
+[32m+[m[32m                // play the word from the beginning when we resume playback.[m
+[32m+[m[32m                mMediaPlayer.pause();[m
+[32m+[m[32m                mMediaPlayer.seekTo(0);[m
+[32m+[m[32m            } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {[m
+[32m+[m[32m                // The AUDIOFOCUS_GAIN case means we have regained focus and can resume playback.[m
+[32m+[m[32m                mMediaPlayer.start();[m
+[32m+[m[32m            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {[m
+[32m+[m[32m                // The AUDIOFOCUS_LOSS case means we've lost audio focus and[m
+[32m+[m[32m                // Stop playback and clean up resources[m
+[32m+[m[32m                releaseMediaPlayer();[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m[32m    };[m
+[32m+[m
+[32m+[m
+[32m+[m[32m    public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {[m
+[32m+[m[32m        // Release the media player if it currently exists because we are about to[m
+[32m+[m[32m        // play a different sound file[m
+[32m+[m[32m        releaseMediaPlayer();[m
+[32m+[m
+[32m+[m[32m        // Get the {@link Word} object at the given position the user clicked on[m
+[32m+[m[32m        Word word = (Word) adapterView.getItemAtPosition(position);[m
+[32m+[m
+[32m+[m[32m        // Request audio focus so in order to play the audio file. The app needs to play a[m
+[32m+[m[32m        // short audio file, so we will request audio focus with a short amount of time[m
+[32m+[m[32m        // with AUDIOFOCUS_GAIN_TRANSIENT.[m
+[32m+[m[32m        int result = mAudioManager.requestAudioFocus(mOnAudioFocusChangeListener,[m
+[32m+[m[32m                AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);[m
+[32m+[m
+[32m+[m[32m        if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {[m
+[32m+[m[32m            // We have audio focus now.[m
+[32m+[m
+[32m+[m[32m            // Create and setup the {@link MediaPlayer} for the audio resource associated[m
+[32m+[m[32m            // with the current word[m
+[32m+[m[32m            mMediaPlayer = MediaPlayer.create(mContext, word.getAudioResourceId());[m
+[32m+[m
+[32m+[m[32m            // Start the audio file[m
+[32m+[m[32m            mMediaPlayer.start();[m
+[32m+[m
+[32m+[m[32m            // Setup a listener on the media player, so that we can stop and release the[m
+[32m+[m[32m            // media player once the sound has finished playing.[m
+[32m+[m[32m            mMediaPlayer.setOnCompletionListener(mCompletionListener);[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    private void releaseMediaPlayer() {[m
+[32m+[m[32m        // If the media player is not null, then it may be currently playing a sound.[m
+[32m+[m[32m        if (mMediaPlayer != null) {[m
+[32m+[m[32m            // Regardless of the current state of the media player, release its resources[m
+[32m+[m[32m            // because we no longer need it.[m
+[32m+[m[32m            mMediaPlayer.release();[m
+[32m+[m
+[32m+[m[32m            // Set the media player back to null. For our code, we've decided that[m
+[32m+[m[32m            // setting the media player to null is an easy way to tell that the media player[m
+[32m+[m[32m            // is not configured to play an audio file at the moment.[m
+[32m+[m[32m            mMediaPlayer = null;[m
+[32m+[m
+[32m+[m[32m            // Regardless of whether or not we were granted audio focus, abandon it. This also[m
+[32m+[m[32m            // unregisters the AudioFocusChangeListener so we don't get anymore callbacks.[m
+[32m+[m[32m            mAudioManager.abandonAudioFocus(mOnAudioFocusChangeListener);[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/src/main/java/com/example/android/miwok/MainActivity.java b/app/src/main/java/com/example/android/miwok/MainActivity.java[m
+[1mindex 9911f80..4e2f389 100644[m
+[1m--- a/app/src/main/java/com/example/android/miwok/MainActivity.java[m
+[1m+++ b/app/src/main/java/com/example/android/miwok/MainActivity.java[m
+[36m@@ -17,6 +17,8 @@[m [mpackage com.example.android.miwok;[m
+ [m
+ import android.content.Intent;[m
+ import android.os.Bundle;[m
+[32m+[m[32mimport android.support.design.widget.TabLayout;[m
+[32m+[m[32mimport android.support.v4.view.ViewPager;[m
+ import android.support.v7.app.AppCompatActivity;[m
+ import android.view.View;[m
+ import android.view.View.OnClickListener;[m
+[36m@@ -29,70 +31,47 @@[m [mpublic class MainActivity extends AppCompatActivity {[m
+         super.onCreate(savedInstanceState);[m
+ [m
+         // Set the content of the activity to use the activity_main.xml layout file[m
+[31m-        setContentView(R.layout.activity_main);[m
+[32m+[m[32m        setContentView(R.layout.main_pager);[m
+ [m
+[31m-        // Find the View that shows the numbers category[m
+[31m-        TextView numbers = (TextView) findViewById(R.id.numbers);[m
+[32m+[m[32m        FragmentPageAdapter fragmentPageAdapter = new FragmentPageAdapter(getSupportFragmentManager());[m
+ [m
+[31m-        // Set a click listener on that View[m
+[31m-        numbers.setOnClickListener(new OnClickListener() {[m
+[31m-            // The code in this method will be executed when the numbers category is clicked on.[m
+[31m-            @Override[m
+[31m-            public void onClick(View view) {[m
+[31m-                // Create a new intent to open the {@link NumbersActivity}[m
+[31m-                Intent numbersIntent = new Intent(MainActivity.this, NumbersActivity.class);[m
+[32m+[m[32m        ViewPager root = (ViewPager) findViewById(R.id.pager);[m
+[32m+[m[32m        root.setAdapter(fragmentPageAdapter);[m
+[32m+[m
+[32m+[m[32m        TabLayout tabLayout = (TabLayout) findViewById(R.id.sliding_tabs);[m
+[32m+[m[32m        tabLayout.setupWithViewPager(root);[m
+ [m
+[31m-                // Start the new activity[m
+[31m-                startActivity(numbersIntent);[m
+[32m+[m[32m       /* TextView numbers_text = (TextView) findViewById(R.id.numbers);[m
+[32m+[m[32m        numbers_text.setOnClickListener(new OnClickListener() {[m
+[32m+[m[32m            @Override[m
+[32m+[m[32m            public void onClick(View v) {[m
+[32m+[m[32m                Intent intent = new Intent(getBaseContext(), NumbersActivity.class);[m
+[32m+[m[32m                startActivity(intent);[m
+             }[m
+         });[m
+ [m
+[31m-        // Find the View that shows the family category[m
+[31m-        TextView family = (TextView) findViewById(R.id.family);[m
+[31m-[m
+[31m-        // Set a click listener on that View[m
+[31m-        family.setOnClickListener(new OnClickListener() {[m
+[31m-            // The code in this method will be executed when the family category is clicked on.[m
+[32m+[m[32m        TextView colors_text = (TextView) findViewById(R.id.colors);[m
+[32m+[m[32m        colors_text.setOnClickListener(new OnClickListener() {[m
+             @Override[m
+[31m-            public void onClick(View view) {[m
+[31m-                // Create a new intent to open the {@link FamilyActivity}[m
+[31m-                Intent familyIntent = new Intent(MainActivity.this, FamilyActivity.class);[m
+[31m-[m
+[31m-                // Start the new activity[m
+[31m-                startActivity(familyIntent);[m
+[32m+[m[32m            public void onClick(View v) {[m
+[32m+[m[32m                startActivity(new Intent(getBaseContext(), ColorsActivity.class));[m
+             }[m
+         });[m
+ [m
+[31m-        // Find the View that shows the colors category[m
+[31m-        TextView colors = (TextView) findViewById(R.id.colors);[m
+[31m-[m
+[31m-        // Set a click listener on that View[m
+[31m-        colors.setOnClickListener(new OnClickListener() {[m
+[31m-            // The code in this method will be executed when the colors category is clicked on.[m
+[32m+[m[32m        TextView family_text = (TextView) findViewById(R.id.family);[m
+[32m+[m[32m        family_text.setOnClickListener(new OnClickListener() {[m
+             @Override[m
+[31m-            public void onClick(View view) {[m
+[31m-                // Create a new intent to open the {@link ColorsActivity}[m
+[31m-                Intent colorsIntent = new Intent(MainActivity.this, ColorsActivity.class);[m
+[31m-[m
+[31m-                // Start the new activity[m
+[31m-                startActivity(colorsIntent);[m
+[32m+[m[32m            public void onClick(View v) {[m
+[32m+[m[32m                startActivity(new Intent(getBaseContext(), FamilyActivity.class));[m
+             }[m
+         });[m
+ [m
+[31m-        // Find the View that shows the phrases category[m
+[31m-        TextView phrases = (TextView) findViewById(R.id.phrases);[m
+[31m-[m
+[31m-        // Set a click listener on that View[m
+[31m-        phrases.setOnClickListener(new OnClickListener() {[m
+[31m-            // The code in this method will be executed when the phrases category is clicked on.[m
+[32m+[m[32m        TextView phrases_text = (TextView) findViewById(R.id.phrases);[m
+[32m+[m[32m        phrases_text.setOnClickListener(new OnClickListener() {[m
+             @Override[m
+[31m-            public void onClick(View view) {[m
+[31m-                // Create a new intent to open the {@link PhrasesActivity}[m
+[31m-                Intent phrasesIntent = new Intent(MainActivity.this, PhrasesActivity.class);[m
+[31m-[m
+[31m-                // Start the new activity[m
+[31m-                startActivity(phrasesIntent);[m
+[32m+[m[32m            public void onClick(View v) {[m
+[32m+[m[32m                startActivity(new Intent(getBaseContext(), PhrasesActivity.class));[m
+             }[m
+[31m-        });[m
+[32m+[m[32m        });*/[m
+     }[m
+ }[m
+[1mdiff --git a/app/src/main/java/com/example/android/miwok/NumbersActivity.java b/app/src/main/java/com/example/android/miwok/NumbersActivity.java[m
+[1mindex 731facf..843ebde 100644[m
+[1m--- a/app/src/main/java/com/example/android/miwok/NumbersActivity.java[m
+[1m+++ b/app/src/main/java/com/example/android/miwok/NumbersActivity.java[m
+[36m@@ -15,171 +15,30 @@[m
+  */[m
+ package com.example.android.miwok;[m
+ [m
+[31m-import android.content.Context;[m
+[31m-import android.media.AudioManager;[m
+[31m-import android.media.MediaPlayer;[m
+[32m+[m
+[32m+[m
+ import android.os.Bundle;[m
+ import android.support.v7.app.AppCompatActivity;[m
+[31m-import android.view.View;[m
+[31m-import android.widget.AdapterView;[m
+[31m-import android.widget.ListView;[m
+ [m
+ import java.util.ArrayList;[m
+ [m
+ public class NumbersActivity extends AppCompatActivity {[m
+ [m
+[31m-    /** Handles playback of all the sound files */[m
+[31m-    private MediaPlayer mMediaPlayer;[m
+ [m
+[31m-    /** Handles audio focus when playing a sound file */[m
+[31m-    private AudioManager mAudioManager;[m
+ [m
+[31m-    /**[m
+[31m-     * This listener gets triggered whenever the audio focus changes[m
+[31m-     * (i.e., we gain or lose audio focus because of another app or device).[m
+[31m-     */[m
+[31m-    private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {[m
+[31m-        @Override[m
+[31m-        public void onAudioFocusChange(int focusChange) {[m
+[31m-            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||[m
+[31m-                    focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {[m
+[31m-                // The AUDIOFOCUS_LOSS_TRANSIENT case means that we've lost audio focus for a[m
+[31m-                // short amount of time. The AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK case means that[m
+[31m-                // our app is allowed to continue playing sound but at a lower volume. We'll treat[m
+[31m-                // both cases the same way because our app is playing short sound files.[m
+ [m
+[31m-                // Pause playback and reset player to the start of the file. That way, we can[m
+[31m-                // play the word from the beginning when we resume playback.[m
+[31m-                mMediaPlayer.pause();[m
+[31m-                mMediaPlayer.seekTo(0);[m
+[31m-            } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {[m
+[31m-                // The AUDIOFOCUS_GAIN case means we have regained focus and can resume playback.[m
+[31m-                mMediaPlayer.start();[m
+[31m-            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {[m
+[31m-                // The AUDIOFOCUS_LOSS case means we've lost audio focus and[m
+[31m-                // Stop playback and clean up resources[m
+[31m-                releaseMediaPlayer();[m
+[31m-            }[m
+[31m-        }[m
+[31m-    };[m
+ [m
+[31m-    /**[m
+[31m-     * This listener gets triggered when the {@link MediaPlayer} has completed[m
+[31m-     * playing the audio file.[m
+[31m-     */[m
+[31m-    private MediaPlayer.OnCompletionListener mCompletionListener = new MediaPlayer.OnCompletionListener() {[m
+[31m-        @Override[m
+[31m-        public void onCompletion(MediaPlayer mediaPlayer) {[m
+[31m-            // Now that the sound file has finished playing, release the media player resources.[m
+[31m-            releaseMediaPlayer();[m
+[31m-        }[m
+[31m-    };[m
+ [m
+     @Override[m
+     protected void onCreate(Bundle savedInstanceState) {[m
+         super.onCreate(savedInstanceState);[m
+[31m-        setContentView(R.layout.word_list);[m
+[31m-[m
+[31m-        // Create and setup the {@link AudioManager} to request audio focus[m
+[31m-        mAudioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);[m
+[31m-[m
+[31m-        // Create a list of words[m
+[31m-        final ArrayList<Word> words = new ArrayList<Word>();[m
+[31m-        words.add(new Word(R.string.number_one, R.string.miwok_number_one,[m
+[31m-                R.drawable.number_one, R.raw.number_one));[m
+[31m-        words.add(new Word(R.string.number_two, R.string.miwok_number_two,[m
+[31m-                R.drawable.number_two, R.raw.number_two));[m
+[31m-        words.add(new Word(R.string.number_three, R.string.miwok_number_three,[m
+[31m-                R.drawable.number_three, R.raw.number_three));[m
+[31m-        words.add(new Word(R.string.number_four, R.string.miwok_number_four,[m
+[31m-                R.drawable.number_four, R.raw.number_four));[m
+[31m-        words.add(new Word(R.string.number_five, R.string.miwok_number_five,[m
+[31m-                R.drawable.number_five, R.raw.number_five));[m
+[31m-        words.add(new Word(R.string.number_six, R.string.miwok_number_six,[m
+[31m-                R.drawable.number_six, R.raw.number_six));[m
+[31m-        words.add(new Word(R.string.number_seven, R.string.miwok_number_seven,[m
+[31m-                R.drawable.number_seven, R.raw.number_seven));[m
+[31m-        words.add(new Word(R.string.number_eight, R.string.miwok_number_eight,[m
+[31m-                R.drawable.number_eight, R.raw.number_eight));[m
+[31m-        words.add(new Word(R.string.number_nine, R.string.miwok_number_nine,[m
+[31m-                R.drawable.number_nine, R.raw.number_nine));[m
+[31m-        words.add(new Word(R.string.number_ten, R.string.miwok_number_ten,[m
+[31m-                R.drawable.number_ten, R.raw.number_ten));[m
+[31m-[m
+[31m-        // Create an {@link WordAdapter}, whose data source is a list of {@link Word}s. The[m
+[31m-        // adapter knows how to create list items for each item in the list.[m
+[31m-        WordAdapter adapter = new WordAdapter(this, words, R.color.category_numbers);[m
+[31m-[m
+[31m-        // Find the {@link ListView} object in the view hierarchy of the {@link Activity}.[m
+[31m-        // There should be a {@link ListView} with the view ID called list, which is declared in the[m
+[31m-        // word_list.xml layout file.[m
+[31m-        ListView listView = (ListView) findViewById(R.id.list);[m
+[31m-[m
+[31m-        // Make the {@link ListView} use the {@link WordAdapter} we created above, so that the[m
+[31m-        // {@link ListView} will display list items for each {@link Word} in the list.[m
+[31m-        listView.setAdapter(adapter);[m
+[31m-[m
+[31m-        // Set a click listener to play the audio when the list item is clicked on[m
+[31m-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {[m
+[31m-            @Override[m
+[31m-            public void onItemClick(AdapterView<?> adapterView, View view, int position, long l) {[m
+[31m-                // Release the media player if it currently exists because we are about to[m
+[31m-                // play a different sound file[m
+[31m-                releaseMediaPlayer();[m
+[31m-[m
+[31m-                // Get the {@link Word} object at the given position the user clicked on[m
+[31m-                Word word = words.get(position);[m
+[32m+[m[32m        setContentView(R.layout.container);[m
+[32m+[m[32m        getSupportFragmentManager().beginTransaction().replace([m
+[32m+[m[32m                R.id.container, new NumbersFragment()[m
+[32m+[m[32m        ).commit();[m
+ [m
+[31m-                // Request audio focus so in order to play the audio file. The app needs to play a[m
+[31m-                // short audio file, so we will request audio focus with a short amount of time[m
+[31m-                // with AUDIOFOCUS_GAIN_TRANSIENT.[m
+[31m-                int result = mAudioManager.requestAudioFocus(mOnAudioFocusChangeListener,[m
+[31m-                        AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT);[m
+[31m-[m
+[31m-                if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {[m
+[31m-                    // We have audio focus now.[m
+[31m-[m
+[31m-                    // Create and setup the {@link MediaPlayer} for the audio resource associated[m
+[31m-                    // with the current word[m
+[31m-                    mMediaPlayer = MediaPlayer.create(NumbersActivity.this, word.getAudioResourceId());[m
+[31m-[m
+[31m-                    // Start the audio file[m
+[31m-                    mMediaPlayer.start();[m
+[31m-[m
+[31m-                    // Setup a listener on the media player, so that we can stop and release the[m
+[31m-                    // media player once the sound has finished playing.[m
+[31m-                    mMediaPlayer.setOnCompletionListener(mCompletionListener);[m
+[31m-                }[m
+[31m-            }[m
+[31m-        });[m
+     }[m
+ [m
+[31m-    @Override[m
+[31m-    protected void onStop() {[m
+[31m-        super.onStop();[m
+[31m-        // When the activity is stopped, release the media player resources because we won't[m
+[31m-        // be playing any more sounds.[m
+[31m-        releaseMediaPlayer();[m
+[31m-    }[m
+ [m
+[31m-    /**[m
+[31m-     * Clean up the media player by releasing its resources.[m
+[31m-     */[m
+[31m-    private void releaseMediaPlayer() {[m
+[31m-        // If the media player is not null, then it may be currently playing a sound.[m
+[31m-        if (mMediaPlayer != null) {[m
+[31m-            // Regardless of the current state of the media player, release its resources[m
+[31m-            // because we no longer need it.[m
+[31m-            mMediaPlayer.release();[m
+ [m
+[31m-            // Set the media player back to null. For our code, we've decided that[m
+[31m-            // setting the media player to null is an easy way to tell that the media player[m
+[31m-            // is not configured to play an audio file at the moment.[m
+[31m-            mMediaPlayer = null;[m
+[31m-[m
+[31m-            // Regardless of whether or not we were granted audio focus, abandon it. This also[m
+[31m-            // unregisters the AudioFocusChangeListener so we don't get anymore callbacks.[m
+[31m-            mAudioManager.abandonAudioFocus(mOnAudioFocusChangeListener);[m
+[31m-        }[m
+[31m-    }[m
+ }[m
+[1mdiff --git a/app/src/main/java/com/example/android/miwok/NumbersFragment.java b/app/src/main/java/com/example/android/miwok/NumbersFragment.java[m
+[1mnew file mode 100644[m
+[1mindex 0000000..62dbbb1[m
+[1m--- /dev/null[m
+[1m+++ b/app/src/main/java/com/example/android/miwok/NumbersFragment.java[m
+[36m@@ -0,0 +1,144 @@[m
+[32m+[m[32mpackage com.example.android.miwok;[m
+[32m+[m
+[32m+[m[32mimport android.content.Context;[m
+[32m+[m[32mimport android.media.AudioManager;[m
+[32m+[m[32mimport android.media.MediaPlayer;[m
+[32m+[m[32mimport android.net.Uri;[m
+[32m+[m[32mimport android.os.Bundle;[m
+[32m+[m[32mimport android.support.annotation.Nullable;[m
+[32m+[m
+[32m+[m[32mimport android.support.v4.app.Fragment;[m
+[32m+[m[32mimport android.view.LayoutInflater;[m
+[32m+[m[32mimport android.view.View;[m
+[32m+[m[32mimport android.view.ViewGroup;[m
+[32m+[m[32mimport android.widget.ListView;[m
+[32m+[m[32mimport android.widget.TextView;[m
+[32m+[m
+[32m+[m[32mimport java.util.ArrayList;[m
+[32m+[m
+[32m+[m
+[32m+[m[32m/**[m
+[32m+[m[32m * A simple {@link Fragment} subclass.[m
+[32m+[m[32m * Activities that contain this fragment must implement the[m
+[32m+[m[32m * {@link NumbersFragment.OnFragmentInteractionListener} interface[m
+[32m+[m[32m * to handle interaction events.[m
+[32m+[m[32m * Use the {@link NumbersFragment#newInstance} factory method to[m
+[32m+[m[32m * create an instance of this fragment.[m
+[32m+[m[32m */[m
+[32m+[m[32mpublic class NumbersFragment extends Fragment {[m
+[32m+[m
+[32m+[m[32m    /** Handles playback of all the sound files */[m
+[32m+[m[32m    private MediaPlayer mMediaPlayer;[m
+[32m+[m
+[32m+[m[32m    /** Handles audio focus when playing a sound file */[m
+[32m+[m[32m    private AudioManager mAudioManager;[m
+[32m+[m
+[32m+[m[32m    /**[m
+[32m+[m[32m     * This listener gets triggered whenever the audio focus changes[m
+[32m+[m[32m     * (i.e., we gain or lose audio focus because of another app or device).[m
+[32m+[m[32m     */[m
+[32m+[m[32m    private AudioManager.OnAudioFocusChangeListener mOnAudioFocusChangeListener = new AudioManager.OnAudioFocusChangeListener() {[m
+[32m+[m[32m        @Override[m
+[32m+[m[32m        public void onAudioFocusChange(int focusChange) {[m
+[32m+[m[32m            if (focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT ||[m
+[32m+[m[32m                    focusChange == AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK) {[m
+[32m+[m[32m                // The AUDIOFOCUS_LOSS_TRANSIENT case means that we've lost audio focus for a[m
+[32m+[m[32m                // short amount of time. The AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK case means that[m
+[32m+[m[32m                // our app is allowed to continue playing sound but at a lower volume. We'll treat[m
+[32m+[m[32m                // both cases the same way because our app is playing short sound files.[m
+[32m+[m
+[32m+[m[32m                // Pause playback and reset player to the start of the file. That way, we can[m
+[32m+[m[32m                // play the word from the beginning when we resume playback.[m
+[32m+[m[32m                mMediaPlayer.pause();[m
+[32m+[m[32m                mMediaPlayer.seekTo(0);[m
+[32m+[m[32m            } else if (focusChange == AudioManager.AUDIOFOCUS_GAIN) {[m
+[32m+[m[32m                // The AUDIOFOCUS_GAIN case means we have regained focus and can resume playback.[m
+[32m+[m[32m                mMediaPlayer.start();[m
+[32m+[m[32m            } else if (focusChange == AudioManager.AUDIOFOCUS_LOSS) {[m
+[32m+[m[32m                // The AUDIOFOCUS_LOSS case means we've lost audio focus and[m
+[32m+[m[32m                // Stop playback and clean up resources[m
+[32m+[m[32m                releaseMediaPlayer();[m
+[32m+[m[32m            }[m
+[32m+[m[32m        }[m
+[32m+[m[32m    };[m
+[32m+[m
+[32m+[m
+[32m+[m[32m    public NumbersFragment(){}[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public View onCreateView(LayoutInflater inflater, ViewGroup container,[m
+[32m+[m[32m                             Bundle savedInstanceState) {[m
+[32m+[m[32m        View rootView = inflater.inflate(R.layout.word_list, container, false);[m
+[32m+[m
+[32m+[m[32m        // Create and setup the {@link AudioManager} to request audio focus[m
+[32m+[m[32m        mAudioManager = (AudioManager) getActivity().getSystemService(Context.AUDIO_SERVICE);[m
+[32m+[m
+[32m+[m[32m        // Create a list of words[m
+[32m+[m[32m        final ArrayList<Word> words = new ArrayList<Word>();[m
+[32m+[m[32m        words.add(new Word(R.string.number_one, R.string.miwok_number_one,[m
+[32m+[m[32m                R.drawable.number_one, R.raw.number_one));[m
+[32m+[m[32m        words.add(new Word(R.string.number_two, R.string.miwok_number_two,[m
+[32m+[m[32m                R.drawable.number_two, R.raw.number_two));[m
+[32m+[m[32m        words.add(new Word(R.string.number_three, R.string.miwok_number_three,[m
+[32m+[m[32m                R.drawable.number_three, R.raw.number_three));[m
+[32m+[m[32m        words.add(new Word(R.string.number_four, R.string.miwok_number_four,[m
+[32m+[m[32m                R.drawable.number_four, R.raw.number_four));[m
+[32m+[m[32m        words.add(new Word(R.string.number_five, R.string.miwok_number_five,[m
+[32m+[m[32m                R.drawable.number_five, R.raw.number_five));[m
+[32m+[m[32m        words.add(new Word(R.string.number_six, R.string.miwok_number_six,[m
+[32m+[m[32m                R.drawable.number_six, R.raw.number_six));[m
+[32m+[m[32m        words.add(new Word(R.string.number_seven, R.string.miwok_number_seven,[m
+[32m+[m[32m                R.drawable.number_seven, R.raw.number_seven));[m
+[32m+[m[32m        words.add(new Word(R.string.number_eight, R.string.miwok_number_eight,[m
+[32m+[m[32m                R.drawable.number_eight, R.raw.number_eight));[m
+[32m+[m[32m        words.add(new Word(R.string.number_nine, R.string.miwok_number_nine,[m
+[32m+[m[32m                R.drawable.number_nine, R.raw.number_nine));[m
+[32m+[m[32m        words.add(new Word(R.string.number_ten, R.string.miwok_number_ten,[m
+[32m+[m[32m                R.drawable.number_ten, R.raw.number_ten));[m
+[32m+[m
+[32m+[m[32m        // Create an {@link WordAdapter}, whose data source is a list of {@link Word}s. The[m
+[32m+[m[32m        // adapter knows how to create list items for each item in the list.[m
+[32m+[m[32m        WordAdapter adapter = new WordAdapter(getActivity(), words, R.color.category_numbers);[m
+[32m+[m
+[32m+[m[32m        // Find the {@link ListView} object in the view hierarchy of the {@link Activity}.[m
+[32m+[m[32m        // There should be a {@link ListView} with the view ID called list, which is declared in the[m
+[32m+[m[32m        // word_list.xml layout file.[m
+[32m+[m[32m        ListView listView = (ListView) rootView.findViewById(R.id.list);[m
+[32m+[m
+[32m+[m[32m        // Make the {@link ListView} use the {@link WordAdapter} we created above, so that the[m
+[32m+[m[32m        // {@link ListView} will display list items for each {@link Word} in the list.[m
+[32m+[m[32m        listView.setAdapter(adapter);[m
+[32m+[m
+[32m+[m[32m        // Set a click listener to play the audio when the list item is clicked on[m
+[32m+[m[32m        listView.setOnItemClickListener(new ItemClickWord(mAudioManager, mMediaPlayer, getActivity()));[m
+[32m+[m
+[32m+[m[32m        return rootView;[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    @Override[m
+[32m+[m[32m    public void onStart() {[m
+[32m+[m[32m        super.onStart();[m
+[32m+[m[32m        releaseMediaPlayer();[m
+[32m+[m[32m    }[m
+[32m+[m
+[32m+[m[32m    /**[m
+[32m+[m[32m     * Clean up the media player by releasing its resources.[m
+[32m+[m[32m     */[m
+[32m+[m[32m    private void releaseMediaPlayer() {[m
+[32m+[m[32m        // If the media player is not null, then it may be currently playing a sound.[m
+[32m+[m[32m        if (mMediaPlayer != null) {[m
+[32m+[m[32m            // Regardless of the current state of the media player, release its resources[m
+[32m+[m[32m            // because we no longer need it.[m
+[32m+[m[32m            mMediaPlayer.release();[m
+[32m+[m
+[32m+[m[32m            // Set the media player back to null. For our code, we've decided that[m
+[32m+[m[32m            // setting the media player to null is an easy way to tell that the media player[m
+[32m+[m[32m            // is not configured to play an audio file at the moment.[m
+[32m+[m[32m            mMediaPlayer = null;[m
+[32m+[m
+[32m+[m[32m            // Regardless of whether or not we were granted audio focus, abandon it. This also[m
+[32m+[m[32m            // unregisters the AudioFocusChangeListener so we don't get anymore callbacks.[m
+[32m+[m[32m            mAudioManager.abandonAudioFocus(mOnAudioFocusChangeListener);[m
+[32m+[m[32m        }[m
+[32m+[m[32m    }[m
+[32m+[m[32m}[m
+[1mdiff --git a/app/src/main/java/com/example/android/miwok/PhrasesActivity.java b/app/src/main/java/com/example/android/miwok/PhrasesActivity.java[m
+[1mindex e4afe57..a33237f 100644[m
+[1m--- a/app/src/main/java/com/example/android/miwok/PhrasesActivity.java[m
+[1m+++ b/app/src/main/java/com/example/android/miwok/PhrasesA
