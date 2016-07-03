@@ -35,8 +35,14 @@ public class PhrasesActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.container);
+
+        Fragment fragment = new BaseFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt(MainActivity.KEY, R.string.category_phrases);
+        fragment.setArguments(bundle);
+
         getSupportFragmentManager().beginTransaction().replace(
-                R.id.container, new PhrasesFragment()
+                R.id.container, fragment
         ).commit();
 
     }

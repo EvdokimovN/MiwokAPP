@@ -18,6 +18,7 @@ package com.example.android.miwok;
 import android.content.Context;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.support.v4.app.Fragment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -32,8 +33,14 @@ public class ColorsActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.container);
+
+        Fragment fragment = new BaseFragment();
+        Bundle bundle = new Bundle();
+        bundle.putInt(MainActivity.KEY, R.string.category_colors);
+        fragment.setArguments(bundle);
+
         getSupportFragmentManager().beginTransaction().replace(
-                R.id.container, new ColorsFragment()
+                R.id.container, fragment
         ).commit();
     }
 }

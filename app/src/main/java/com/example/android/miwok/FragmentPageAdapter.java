@@ -1,6 +1,7 @@
 package com.example.android.miwok;
 
 
+import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
@@ -25,14 +26,30 @@ public class FragmentPageAdapter extends FragmentPagerAdapter {
     @Override
     public Fragment getItem(int position) {
         if (position == 0) {
-            return new NumbersFragment();
+            Fragment fragment = new BaseFragment();
+            Bundle bundle = new Bundle();
+            bundle.putInt(MainActivity.KEY, R.string.category_numbers);
+            fragment.setArguments(bundle);
+            return fragment;
         } else if (position == 1){
-            return new FamilyFragment();
+            Fragment fragment = new BaseFragment();
+            Bundle bundle = new Bundle();
+            bundle.putInt(MainActivity.KEY, R.string.category_family);
+            fragment.setArguments(bundle);
+            return fragment;
         } else if (position == 2){
-            return new ColorsFragment();
+            Fragment fragment = new BaseFragment();
+            Bundle bundle = new Bundle();
+            bundle.putInt(MainActivity.KEY, R.string.category_colors);
+            fragment.setArguments(bundle);
+            return fragment;
         }
         else {
-            return new PhrasesFragment();
+            Fragment fragment = new BaseFragment();
+            Bundle bundle = new Bundle();
+            bundle.putInt(MainActivity.KEY, R.string.category_phrases);
+            fragment.setArguments(bundle);
+            return fragment;
         }
     }
 
